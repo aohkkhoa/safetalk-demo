@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeTalk Edu — Tâm · Trí · Tướng tuổi teen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#26241F;
+    --paper:#FAF3E8;
+    --teal:#1F4B43;
+    --teal-deep:#153732;
+    --apricot:#F2A65A;
+    --rose:#D97D6E;
+    --mint:#D9E8DE;
+    --mint-line:#B7CFC1;
+    --card:#FFFDF8;
+    --shadow: 0 1px 0 rgba(38,36,31,0.06);
+    --radius: 22px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Be Vietnam Pro', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:'Fraunces', serif; letter-spacing:-0.01em; }
+  a{color:inherit;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--teal);
+    opacity:0.75;
+  }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 28px; }
+
+  /* ---------- speech-frame signature: rounded card with a tail ---------- */
+  .frame{
+    position:relative;
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    border:1px solid rgba(38,36,31,0.08);
+  }
+  .frame::after{
+    content:"";
+    position:absolute;
+    width:22px; height:22px;
+    background:inherit;
+    border-right:1px solid rgba(38,36,31,0.08);
+    border-bottom:1px solid rgba(38,36,31,0.08);
+    bottom:-11px; left:36px;
+    transform:rotate(45deg);
+    border-bottom-right-radius:5px;
+  }
+
+  /* ---------- nav ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(250,243,232,0.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(38,36,31,0.08);
+  }
+  nav{ display:flex; align-items:center; justify-content:space-between; padding:18px 28px; max-width:1080px; margin:0 auto; }
+  .logo{ display:flex; align-items:center; gap:9px; font-weight:800; font-size:18px; }
+  .logo .dot{ width:10px;height:10px;border-radius:50%; background:var(--apricot); display:inline-block; }
+  .navlinks{ display:flex; gap:30px; font-size:14.5px; font-weight:500; }
+  .navlinks a{ text-decoration:none; opacity:0.8; transition:opacity .15s; }
+  .navlinks a:hover{ opacity:1; }
+  .navcta{
+    background:var(--teal); color:var(--paper); padding:10px 20px; border-radius:999px;
+    font-weight:600; font-size:14px; text-decoration:none; white-space:nowrap;
+  }
+  @media (max-width:720px){ .navlinks{display:none;} }
+
+  /* ---------- hero ---------- */
+  .hero{ padding:76px 0 60px; position:relative; overflow:hidden; }
+  .hero-inner{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:56px; align-items:center; }
+  @media (max-width:860px){ .hero-inner{ grid-template-columns:1fr; } }
+  .hero h1{ font-size:clamp(34px,5vw,54px); font-weight:600; line-height:1.06; margin:14px 0 20px; }
+  .hero h1 em{ font-style:italic; color:var(--teal); }
+  .hero p{ font-size:17px; color:rgba(38,36,31,0.75); max-width:480px; margin-bottom:30px; }
+  .btnrow{ display:flex; gap:14px; flex-wrap:wrap; }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:13px 24px; border-radius:999px; font-weight:600; font-size:14.5px;
+    text-decoration:none; cursor:pointer; border:none; font-family:inherit;
+  }
+  .btn-primary{ background:var(--teal); color:var(--paper); }
+  .btn-primary:hover{ background:var(--teal-deep); }
+  .btn-ghost{ background:transparent; color:var(--ink); border:1.5px solid rgba(38,36,31,0.25); }
+  .btn-ghost:hover{ border-color:var(--ink); }
+
+  .hero-art{ position:relative; height:380px; }
+  .hero-card{
+    position:absolute; padding:22px; width:250px;
+  }
+  .hc1{ top:0; left:10px; transform:rotate(-4deg); background:var(--mint); border-color:var(--mint-line);}
+  .hc1::after{ background:var(--mint); border-color:var(--mint-line);}
+  .hc2{ top:120px; left:150px; transform:rotate(3deg); z-index:2; }
+  .hc3{ top:250px; left:0; transform:rotate(-2deg); background:var(--apricot); color:var(--teal-deep); border-color:transparent;}
+  .hc3::after{ background:var(--apricot); border-color:transparent; }
+  .hero-card .tag{ font-size:11px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.06em; opacity:.65; margin-bottom:8px; display:block;}
+  .hero-card .msg{ font-size:14.5px; font-weight:500; }
+
+  /* ---------- section shell ---------- */
+  section.block{ padding:70px 0; border-top:1px solid rgba(38,36,31,0.08); }
+  .block-head{ margin-bottom:38px; max-width:600px; }
+  .block-head h2{ font-size:clamp(26px,3.4vw,36px); font-weight:600; margin:10px 0 12px; }
+  .block-head p{ color:rgba(38,36,31,0.7); font-size:15.5px; }
+
+  /* ---------- 1. thu vien ---------- */
+  .lib-filters{ display:flex; gap:10px; margin-bottom:26px; flex-wrap:wrap; }
+  .chip{
+    font-size:13.5px; font-weight:600; padding:8px 16px; border-radius:999px;
+    border:1.5px solid rgba(38,36,31,0.18); background:transparent; cursor:pointer; font-family:inherit;
+  }
+  .chip.active{ background:var(--teal); border-color:var(--teal); color:var(--paper); }
+  .lib-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  @media (max-width:860px){ .lib-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:600px){ .lib-grid{ grid-template-columns:1fr; } }
+  .lib-card{ padding:22px; display:flex; flex-direction:column; gap:10px; height:100%; }
+  .lib-card .badge{
+    align-self:flex-start; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px;
+    background:var(--mint); color:var(--teal-deep); font-family:'JetBrains Mono',monospace; text-transform:uppercase;
+  }
+  .lib-card h3{ font-size:17px; font-weight:600; font-family:'Be Vietnam Pro',sans-serif; }
+  .lib-card p{ font-size:14px; color:rgba(38,36,31,0.68); flex:1; }
+  .lib-card .dl{ font-size:13px; font-weight:600; color:var(--teal); text-decoration:none; }
+
+  /* ---------- 2. hoi an danh ---------- */
+  .ask-grid{ display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:start; }
+  @media (max-width:860px){ .ask-grid{ grid-template-columns:1fr; } }
+  .askform{ padding:28px; }
+  .askform textarea, .askform input, .bookform input, .bookform select, .bookform textarea{
+    width:100%; padding:13px 15px; border-radius:12px; border:1.5px solid rgba(38,36,31,0.15);
+    font-family:inherit; font-size:14.5px; background:var(--paper); resize:vertical; margin-bottom:14px;
+  }
+  .askform label, .bookform label{ font-size:13px; font-weight:600; margin-bottom:6px; display:block; }
+  .small-note{ font-size:12.5px; color:rgba(38,36,31,0.55); margin-top:-6px; margin-bottom:16px; }
+  .qa-feed{ display:flex; flex-direction:column; gap:16px; max-height:460px; overflow-y:auto; padding-right:4px;}
+  .qa-item{ padding:18px 20px; }
+  .qa-item .q{ font-weight:600; font-size:14.5px; margin-bottom:8px; }
+  .qa-item .a{ font-size:13.5px; color:rgba(38,36,31,0.72); background:var(--mint); padding:12px 14px; border-radius:12px; }
+  .qa-item .meta{ font-size:11px; font-family:'JetBrains Mono',monospace; opacity:.5; margin-top:8px; }
+  .pending{ opacity:.6; font-style:italic; }
+
+  /* ---------- 3. quiz ---------- */
+  .quizbox{ padding:30px; max-width:640px; margin:0 auto; }
+  .quiz-progress{ height:5px; background:var(--mint); border-radius:99px; margin-bottom:24px; overflow:hidden; }
+  .quiz-progress-bar{ height:100%; background:var(--apricot); border-radius:99px; transition:width .3s; }
+  .quiz-q{ font-size:19px; font-weight:600; margin-bottom:20px; font-family:'Fraunces',serif; }
+  .quiz-opt{
+    display:block; width:100%; text-align:left; padding:14px 18px; margin-bottom:10px;
+    border-radius:14px; border:1.5px solid rgba(38,36,31,0.15); background:var(--paper);
+    font-family:inherit; font-size:14.5px; cursor:pointer; transition:.15s;
+  }
+  .quiz-opt:hover{ border-color:var(--teal); }
+  .quiz-opt.correct{ background:#DEEFDD; border-color:#5B9A6F; }
+  .quiz-opt.wrong{ background:#F6DCD6; border-color:var(--rose); }
+  .quiz-feedback{ font-size:14px; padding:14px 16px; border-radius:12px; background:var(--mint); margin-top:6px; display:none; }
+  .quiz-result{ text-align:center; padding:20px 0; }
+  .quiz-result .score{ font-family:'Fraunces',serif; font-size:52px; font-weight:600; color:var(--teal); }
+
+  /* ---------- 4. dat lich ---------- */
+  .bookform{ padding:30px; max-width:560px; }
+  .bookrow{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:560px){ .bookrow{ grid-template-columns:1fr; } }
+  .confirm-box{ display:none; text-align:center; padding:34px; }
+  .confirm-box .check{ font-size:40px; margin-bottom:10px; }
+
+  footer{ padding:50px 0 40px; border-top:1px solid rgba(38,36,31,0.1); margin-top:30px; }
+  .foot-grid{ display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:20px; }
+  footer .fine{ font-size:12.5px; color:rgba(38,36,31,0.5); }
+
+  .demo-flag{
+    position:fixed; bottom:18px; right:18px; z-index:60;
+    background:var(--teal-deep); color:var(--paper); font-size:12px; font-family:'JetBrains Mono',monospace;
+    padding:9px 14px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.18); max-width:220px; line-height:1.4;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="logo"><span class="dot"></span> SafeTalk Edu</div>
+    <div class="navlinks">
+      <a href="#library">Thư viện</a>
+      <a href="#ask">Hỏi ẩn danh</a>
+      <a href="#quiz">Quiz</a>
+      <a href="#booking">Đặt lịch</a>
+    </div>
+    <a href="#ask" class="navcta">Hỏi ngay</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-inner">
+    <div>
+      <span class="eyebrow">Kỹ năng sống · An toàn tâm lý</span>
+      <h1>Tâm — Trí — Tướng<br><em>cho tuổi teen</em></h1>
+      <p>Một không gian an toàn để học sinh đọc, hỏi và luyện hiểu biết về ranh giới, cảm xúc và các mối quan hệ — không cần nêu tên.</p>
+      <div class="btnrow">
+        <a href="#ask" class="btn btn-primary">Hỏi ẩn danh ngay</a>
+        <a href="#library" class="btn btn-ghost">Xem thư viện</a>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="hero-card frame hc1"><span class="tag">Thư viện</span><span class="msg">"Ranh giới cá nhân là gì và vì sao nó quan trọng?"</span></div>
+      <div class="hero-card frame hc2"><span class="tag">Hỏi ẩn danh</span><span class="msg">Gửi câu hỏi mà không cần ghi tên, giảm ngại ngùng.</span></div>
+      <div class="hero-card frame hc3"><span class="tag">Quiz</span><span class="msg">Kiểm tra hiểu biết, nhận phản hồi ngay lập tức.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 1. THU VIEN -->
+<section class="block" id="library">
+  <div class="wrap">
+    <div class="block-head">
+      <span class="eyebrow">01 · Thư viện kiến thức</span>
+      <h2>Bài viết ngắn, dễ hiểu, tải miễn phí</h2>
+      <p>Lọc theo chủ đề để tìm đúng nội dung bạn cần.</p>
+    </div>
+    <div class="lib-filters" id="libFilters">
+      <button class="chip active" data-tag="all">Tất cả</button>
+      <button class="chip" data-tag="ranhgioi">Ranh giới</button>
+      <button class="chip" data-tag="camxuc">Cảm xúc</button>
+      <button class="chip" data-tag="mangxahoi">Mạng xã hội</button>
+      <button class="chip" data-tag="giaotiep">Giao tiếp</button>
+    </div>
+    <div class="lib-grid" id="libGrid"></div>
+  </div>
+</section>
+
+<!-- 2. HOI AN DANH -->
+<section class="block" id="ask">
+  <div class="wrap">
+    <div class="block-head">
+      <span class="eyebrow">02 · Hỏi ẩn danh</span>
+      <h2>Gửi câu hỏi mà không cần ghi tên</h2>
+      <p>Câu trả lời demo dưới đây được tạo tự động để minh hoạ — ở bản thật, admin sẽ duyệt trước khi công khai.</p>
+    </div>
+    <div class="ask-grid">
+      <form class="frame askform" id="askForm">
+        <label>Câu hỏi của bạn</label>
+        <textarea id="askInput" rows="5" placeholder="Ví dụ: Làm sao để từ chối khi bạn thân rủ làm điều mình không thoải mái?" required></textarea>
+        <div class="small-note">Không cần đăng nhập. Không lưu tên hay thông tin định danh.</div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Gửi câu hỏi</button>
+      </form>
+      <div class="qa-feed" id="qaFeed"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. QUIZ -->
+<section class="block" id="quiz">
+  <div class="wrap">
+    <div class="block-head" style="margin-left:auto;margin-right:auto;text-align:center;">
+      <span class="eyebrow">03 · Quiz kiểm tra hiểu biết</span>
+      <h2>Thử sức với 4 câu hỏi nhanh</h2>
+      <p>Nhận phản hồi ngay sau mỗi câu trả lời.</p>
+    </div>
+    <div class="frame quizbox" id="quizBox"></div>
+  </div>
+</section>
+
+<!-- 4. DAT LICH -->
+<section class="block" id="booking">
+  <div class="wrap" style="display:flex; justify-content:center;">
+    <div>
+      <div class="block-head" style="text-align:center;">
+        <span class="eyebrow">04 · Đặt lịch workshop</span>
+        <h2>Đăng ký hoạt động trải nghiệm</h2>
+        <p>Dành cho trường học hoặc CLB muốn tổ chức workshop cùng SafeTalk Edu.</p>
+      </div>
+      <form class="frame bookform" id="bookForm">
+        <div class="bookrow">
+          <div><label>Tên trường / CLB</label><input type="text" id="bkOrg" required></div>
+          <div><label>Người liên hệ</label><input type="text" id="bkContact" required></div>
+        </div>
+        <div class="bookrow">
+          <div><label>Email hoặc SĐT</label><input type="text" id="bkPhone" required></div>
+          <div><label>Số lượng học sinh</label><input type="number" id="bkSize" min="1" required></div>
+        </div>
+        <label>Ngày mong muốn</label>
+        <input type="date" id="bkDate" required>
+        <label>Ghi chú thêm</label>
+        <textarea id="bkNote" rows="3" placeholder="Chủ đề quan tâm, khung giờ..."></textarea>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Gửi đăng ký</button>
+      </form>
+      <div class="frame confirm-box" id="confirmBox">
+        <div class="check">✓</div>
+        <h3 style="margin-bottom:6px;">Đã ghi nhận đăng ký!</h3>
+        <p style="color:rgba(38,36,31,0.65); font-size:14.5px;" id="confirmText"></p>
+        <button class="btn btn-ghost" style="margin-top:16px;" onclick="resetBooking()">Đăng ký thêm lịch khác</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <div class="logo"><span class="dot"></span> SafeTalk Edu</div>
+      <p class="fine" style="margin-top:8px;">safetalkedu.vn — bản demo giao diện & chức năng</p>
+    </div>
+    <p class="fine">Nuôi dưỡng Tâm · Nâng cao Trí · Định hình Tướng</p>
+  </div>
+</footer>
+
+<div class="demo-flag">⚠ Đây là bản DEMO — dữ liệu lưu tạm trên trình duyệt (localStorage), câu trả lời AI là giả lập minh hoạ.</div>
+
+<script>
+/* ================= 1. THƯ VIỆN KIẾN THỨC ================= */
+const articles = [
+  {tag:"ranhgioi", badge:"Ranh giới", title:"Ranh giới cá nhân là gì?", desc:"Nhận diện đâu là hành vi vượt quá ranh giới thoải mái của bạn và cách nói 'không' một cách tôn trọng."},
+  {tag:"camxuc", badge:"Cảm xúc", title:"Gọi tên cảm xúc của mình", desc:"Bài tập ngắn giúp bạn nhận diện và diễn đạt cảm xúc thay vì im lặng chịu đựng."},
+  {tag:"mangxahoi", badge:"Mạng xã hội", title:"An toàn khi trò chuyện online", desc:"Những dấu hiệu cảnh báo khi một cuộc trò chuyện trên mạng trở nên không an toàn."},
+  {tag:"giaotiep", badge:"Giao tiếp", title:"Từ chối mà không làm mất lòng", desc:"Cách diễn đạt lời từ chối rõ ràng, giữ được mối quan hệ và sự tôn trọng bản thân."},
+  {tag:"ranhgioi", badge:"Ranh giới", title:"Khi bạn bè vượt giới hạn", desc:"Phải làm gì khi một người bạn thân liên tục làm điều khiến bạn không thoải mái."},
+  {tag:"camxuc", badge:"Cảm xúc", title:"Áp lực đồng trang lứa", desc:"Hiểu vì sao áp lực bạn bè xảy ra và cách giữ vững quan điểm của riêng mình."},
+];
+function renderLibrary(filter){
+  const grid = document.getElementById("libGrid");
+  grid.innerHTML = "";
+  articles.filter(a => filter==="all" || a.tag===filter).forEach(a=>{
+    const el = document.createElement("div");
+    el.className = "frame lib-card";
+    el.innerHTML = `<span class="badge">${a.badge}</span><h3>${a.title}</h3><p>${a.desc}</p><a class="dl" href="#">Tải tài liệu →</a>`;
+    grid.appendChild(el);
+  });
+}
+document.getElementById("libFilters").addEventListener("click", e=>{
+  if(e.target.classList.contains("chip")){
+    document.querySelectorAll("#libFilters .chip").forEach(c=>c.classList.remove("active"));
+    e.target.classList.add("active");
+    renderLibrary(e.target.dataset.tag);
+  }
+});
+renderLibrary("all");
+
+/* ================= 2. HỎI ẨN DANH ================= */
+const qaKey = "safetalk_qa";
+function loadQA(){ return JSON.parse(localStorage.getItem(qaKey) || "[]"); }
+function saveQA(list){ localStorage.setItem(qaKey, JSON.stringify(list)); }
+
+// mock "AI" — ở bản thật đây sẽ là request tới backend gọi API OpenAI/Claude/Gemini
+function mockAiAnswer(question){
+  const q = question.toLowerCase();
+  if(q.includes("từ chối") || q.includes("không thoải mái")){
+    return "Bạn hoàn toàn có quyền nói 'không' với điều khiến mình không thoải mái, kể cả với bạn thân. Một cách nhẹ nhàng: nói rõ cảm xúc của bạn, giữ vững lập trường, và không cần giải thích quá nhiều.";
+  }
+  if(q.includes("ranh giới")){
+    return "Ranh giới cá nhân là giới hạn bạn đặt ra để bảo vệ cảm xúc và không gian riêng của mình. Khi ai đó vượt qua, bạn có quyền lên tiếng — đó không phải là ích kỷ.";
+  }
+  return "Cảm ơn bạn đã chia sẻ. Đây là câu hỏi hay và xứng đáng được lắng nghe kỹ — một tư vấn viên sẽ xem lại câu hỏi này sớm để đưa ra câu trả lời phù hợp nhất.";
+}
+function renderQA(){
+  const feed = document.getElementById("qaFeed");
+  const list = loadQA();
+  feed.innerHTML = "";
+  if(list.length===0){
+    feed.innerHTML = `<div class="frame qa-item"><div class="q">Chưa có câu hỏi nào.</div><div class="a">Hãy là người đầu tiên gửi câu hỏi ẩn danh!</div></div>`;
+    return;
+  }
+  list.slice().reverse().forEach(item=>{
+    const el = document.createElement("div");
+    el.className = "frame qa-item";
+    el.innerHTML = `<div class="q">Ẩn danh hỏi: "${item.q}"</div><div class="a">${item.a}</div><div class="meta">${item.time}</div>`;
+    feed.appendChild(el);
+  });
+}
+document.getElementById("askForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const input = document.getElementById("askInput");
+  const q = input.value.trim();
+  if(!q) return;
+  const list = loadQA();
+  list.push({ q, a: mockAiAnswer(q), time: new Date().toLocaleString("vi-VN") });
+  saveQA(list);
+  input.value = "";
+  renderQA();
+});
+renderQA();
+
+/* ================= 3. QUIZ ================= */
+const quizData = [
+  { q:"Đâu là hành vi vượt quá ranh giới cá nhân?", opts:["Hỏi ý kiến trước khi mượn đồ","Tiếp tục nhắn tin dù bạn đã nói muốn dừng lại","Xin phép trước khi chia sẻ ảnh chung","Chờ được đồng ý trước khi ôm"], correct:1,
+    fb:"Đúng! Tiếp tục làm điều gì đó sau khi người khác đã yêu cầu dừng lại là dấu hiệu rõ ràng của việc vượt ranh giới." },
+  { q:"Khi cảm thấy không thoải mái với một yêu cầu từ bạn bè, bạn nên?", opts:["Im lặng chịu đựng để giữ hoà khí","Nói rõ cảm xúc và giới hạn của mình","Né tránh mãi mãi không gặp lại","Làm theo rồi ấm ức sau"], correct:1,
+    fb:"Chính xác — diễn đạt rõ ràng, tôn trọng cả bản thân lẫn người kia, là cách lành mạnh nhất." },
+  { q:"Dấu hiệu nào cho thấy một cuộc trò chuyện online KHÔNG an toàn?", opts:["Người lạ hỏi thông tin cá nhân và muốn giữ bí mật cuộc trò chuyện","Trò chuyện về sở thích chung","Cùng chia sẻ meme hài hước","Hỏi về bài tập ở trường"], correct:0,
+    fb:"Đúng — yêu cầu giữ bí mật với người thân/gia đình là một cờ đỏ (red flag) cần cảnh giác." },
+  { q:"Áp lực đồng trang lứa (peer pressure) là gì?", opts:["Việc học nhóm cùng bạn bè","Cảm giác phải làm theo để được chấp nhận trong nhóm","Thi đua điểm số lành mạnh","Chia sẻ đồ ăn với bạn"], correct:1,
+    fb:"Chính xác — nhận diện được áp lực này là bước đầu để giữ vững quan điểm riêng của bạn." },
+];
+let quizState = { i:0, score:0, answered:false };
+function renderQuiz(){
+  const box = document.getElementById("quizBox");
+  if(quizState.i >= quizData.length){
+    box.innerHTML = `
+      <div class="quiz-result">
+        <div class="eyebrow">Hoàn thành</div>
+        <div class="score">${quizState.score}/${quizData.length}</div>
+        <p style="margin:10px 0 20px; color:rgba(38,36,31,0.7);">Điểm hiểu biết của bạn về ranh giới & cảm xúc.</p>
+        <button class="btn btn-primary" onclick="quizState={i:0,score:0,answered:false}; renderQuiz();">Làm lại</button>
+      </div>`;
+    return;
+  }
+  const item = quizData[quizState.i];
+  box.innerHTML = `
+    <div class="quiz-progress"><div class="quiz-progress-bar" style="width:${(quizState.i/quizData.length)*100}%"></div></div>
+    <div class="quiz-q">${item.q}</div>
+    <div id="quizOpts"></div>
+    <div class="quiz-feedback" id="quizFb"></div>
+  `;
+  const optsEl = document.getElementById("quizOpts");
+  item.opts.forEach((opt, idx)=>{
+    const b = document.createElement("button");
+    b.className = "quiz-opt";
+    b.textContent = opt;
+    b.onclick = ()=>answerQuiz(idx);
+    optsEl.appendChild(b);
+  });
+}
+function answerQuiz(idx){
+  if(quizState.answered) return;
+  quizState.answered = true;
+  const item = quizData[quizState.i];
+  const opts = document.querySelectorAll(".quiz-opt");
+  opts.forEach((o,i)=>{
+    o.style.pointerEvents = "none";
+    if(i===item.correct) o.classList.add("correct");
+    else if(i===idx) o.classList.add("wrong");
+  });
+  if(idx===item.correct) quizState.score++;
+  const fb = document.getElementById("quizFb");
+  fb.style.display = "block";
+  fb.textContent = item.fb;
+  const nextBtn = document.createElement("button");
+  nextBtn.className = "btn btn-primary";
+  nextBtn.style.marginTop = "16px";
+  nextBtn.textContent = quizState.i === quizData.length-1 ? "Xem kết quả" : "Câu tiếp theo →";
+  nextBtn.onclick = ()=>{ quizState.i++; quizState.answered=false; renderQuiz(); };
+  document.getElementById("quizBox").appendChild(nextBtn);
+}
+renderQuiz();
+
+/* ================= 4. ĐẶT LỊCH WORKSHOP ================= */
+document.getElementById("bookForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const org = document.getElementById("bkOrg").value;
+  const date = document.getElementById("bkDate").value;
+  const bookings = JSON.parse(localStorage.getItem("safetalk_bookings")||"[]");
+  bookings.push({ org, date, time:new Date().toISOString() });
+  localStorage.setItem("safetalk_bookings", JSON.stringify(bookings));
+  document.getElementById("bookForm").style.display = "none";
+  document.getElementById("confirmBox").style.display = "block";
+  document.getElementById("confirmText").textContent = `${org} đã đăng ký workshop ngày ${date}. Đội ngũ SafeTalk Edu sẽ liên hệ xác nhận sớm.`;
+});
+function resetBooking(){
+  document.getElementById("bookForm").reset();
+  document.getElementById("bookForm").style.display = "block";
+  document.getElementById("confirmBox").style.display = "none";
+}
+</script>
+</body>
+</html>
