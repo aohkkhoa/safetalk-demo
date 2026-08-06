@@ -822,7 +822,7 @@
     async function getAiAnswer(question) {
       try {
         // Thay đường dẫn dưới đây bằng link Vercel thực tế của bạn sau khi Deploy xong
-        const response = await fetch('https://safetalk-demo-backend.vercel.app/api/chat', {
+        const response = await fetch('https://safetalk-demo.vercel.app/api/chat', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({prompt: question})
