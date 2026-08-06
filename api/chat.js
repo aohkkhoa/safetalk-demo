@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     }
 
     // 3. Gọi model Gemini 1.5 Flash (Nhanh và miễn phí tốt)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     // 4. "Luật chơi" cho AI - System Prompt
     const systemInstruction = `Bạn là trợ lý ảo của website SafeTalk Edu (safetalkedu.vn). 
