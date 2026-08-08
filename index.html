@@ -239,6 +239,11 @@
       border-color: var(--ink);
     }
 
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
     .hero-art {
       position: relative;
       height: 380px;
@@ -705,9 +710,9 @@
         <form class="frame askform" id="askForm">
           <label>Câu hỏi của bạn</label>
           <textarea id="askInput" rows="5"
-            placeholder="Ví dụ: Làm sao để từ chối khi bạn thân rủ làm điều mình không thoải mái?" required></textarea>
-          <div class="small-note">Không cần đăng nhập. Không lưu tên hay thông tin định danh.</div>
-          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Gửi câu hỏi</button>
+            placeholder="Ví dụ: Làm sao để từ chối khi bạn thân rủ làm điều mình không thoải mái?" maxlength="600" required></textarea>
+          <div class="small-note" id="askLimitNote">Không cần đăng nhập. Không lưu tên hay thông tin định danh.</div>
+          <button type="submit" class="btn btn-primary" id="askSubmit" style="width:100%; justify-content:center;">Gửi câu hỏi</button>
         </form>
         <div class="qa-feed" id="qaFeed"></div>
       </div>
@@ -805,8 +810,50 @@
 
     /* ================= 2. HỎI ẨN DANH ================= */
     const qaKey = "safetalk_qa";
+    const askUsageKey = "safetalk_ask_usage";
+    const clientCooldownMs = 30 * 1000;
+    const maxQuestionsPerDay = 10;
     function loadQA() {return JSON.parse(localStorage.getItem(qaKey) || "[]");}
     function saveQA(list) {localStorage.setItem(qaKey, JSON.stringify(list));}
+    function localDayKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+    function loadAskUsage() {
+      const fallback = {day: localDayKey(), count: 0, lastSentAt: 0};
+      try {
+        const saved = JSON.parse(localStorage.getItem(askUsageKey));
+        return saved && saved.day === fallback.day ? saved : fallback;
+      } catch (_) {
+        return fallback;
+      }
+    }
+    function updateAskControls() {
+      const usage = loadAskUsage();
+      const button = document.getElementById("askSubmit");
+      const note = document.getElementById("askLimitNote");
+      const waitMs = Math.max(0, usage.lastSentAt + clientCooldownMs - Date.now());
+
+      if (usage.count >= maxQuestionsPerDay) {
+        button.disabled = true;
+        note.textContent = "Bạn đã dùng hết 10 câu hỏi hôm nay. Hãy quay lại vào ngày mai nhé.";
+      } else if (waitMs > 0) {
+        button.disabled = true;
+        note.textContent = `Để tránh spam, bạn có thể gửi câu hỏi tiếp theo sau ${Math.ceil(waitMs / 1000)} giây.`;
+      } else {
+        button.disabled = false;
+        note.textContent = `Không cần đăng nhập. Tối đa ${maxQuestionsPerDay} câu hỏi/ngày trên thiết bị này.`;
+      }
+    }
+    function recordAskSubmission() {
+      const usage = loadAskUsage();
+      localStorage.setItem(askUsageKey, JSON.stringify({
+        day: localDayKey(),
+        count: usage.count + 1,
+        lastSentAt: Date.now(),
+      }));
+      updateAskControls();
+    }
 
     // mock "AI" — ở bản thật đây sẽ là request tới backend gọi API OpenAI/Claude/Gemini
     function mockAiAnswer(question) {
@@ -828,7 +875,8 @@
           body: JSON.stringify({prompt: question})
         });
         const data = await response.json();
-        return data.answer;
+        if (!response.ok) return data.error || "Không thể gửi câu hỏi lúc này. Vui lòng thử lại sau.";
+        return data.answer || "Không thể nhận phản hồi từ AI. Vui lòng thử lại sau.";
       } catch (error) {
         console.error("Lỗi gọi AI:", error);
         return "Rất tiếc, hệ thống đang bận. Bạn hãy thử lại sau nhé!";
@@ -856,6 +904,13 @@
       const q = input.value.trim();
       if (!q) return;
 
+      const usage = loadAskUsage();
+      if (usage.count >= maxQuestionsPerDay || usage.lastSentAt + clientCooldownMs > Date.now()) {
+        updateAskControls();
+        return;
+      }
+      recordAskSubmission();
+
       // 1. Hiển thị trạng thái "đang suy nghĩ" cho người dùng biết
       const feed = document.getElementById("qaFeed");
       const tempId = "thinking-" + Date.now();
@@ -874,6 +929,9 @@
       // Xóa cái dòng "đang suy nghĩ" đi và render lại danh sách mới
       renderQA();
     });
+
+    updateAskControls();
+    window.setInterval(updateAskControls, 1000);
 
     /* ================= 3. QUIZ ================= */
     const quizData = [

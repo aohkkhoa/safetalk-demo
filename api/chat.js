@@ -3,9 +3,54 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 // Khởi tạo Gemini với API Key từ biến môi trường Vercel
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Basic demo-only rate limit. This is per Vercel instance, not a production
+// replacement for a shared store such as Redis.
+const allowedOrigins = new Set([
+  "https://safetalk.io.vn",
+  "https://www.safetalk.io.vn",
+]);
+const requestsByIp = new Map();
+const COOLDOWN_MS = 30 * 1000;
+const WINDOW_MS = 60 * 60 * 1000;
+const MAX_REQUESTS_PER_HOUR = 20;
+
+function getClientIp(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  return (Array.isArray(forwarded) ? forwarded[0] : forwarded || "unknown")
+    .split(",")[0]
+    .trim();
+}
+
+function rateLimit(ip) {
+  const now = Date.now();
+
+  for (const [key, timestamps] of requestsByIp) {
+    const active = timestamps.filter(time => now - time < WINDOW_MS);
+    if (active.length) requestsByIp.set(key, active);
+    else requestsByIp.delete(key);
+  }
+
+  const timestamps = requestsByIp.get(ip) || [];
+  const lastRequest = timestamps[timestamps.length - 1];
+  if (lastRequest && now - lastRequest < COOLDOWN_MS) {
+    return { allowed: false, retryAfter: Math.ceil((COOLDOWN_MS - (now - lastRequest)) / 1000) };
+  }
+  if (timestamps.length >= MAX_REQUESTS_PER_HOUR) {
+    return { allowed: false, retryAfter: Math.ceil((WINDOW_MS - (now - timestamps[0])) / 1000) };
+  }
+
+  timestamps.push(now);
+  requestsByIp.set(ip, timestamps);
+  return { allowed: true };
+}
+
 export default async function handler(req, res) {
   // 1. Cấu hình CORS để web của bạn có thể gọi API này
-  res.setHeader('Access-Control-Allow-Origin', '*'); 
+  const origin = req.headers.origin;
+  if (!allowedOrigins.has(origin)) {
+    return res.status(403).json({ error: "Không cho phép gọi API từ nguồn này" });
+  }
+  res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -22,11 +67,23 @@ export default async function handler(req, res) {
   try {
     const { prompt } = req.body;
 
-    if (!prompt) {
+    if (typeof prompt === "string" && prompt.length > 600) {
+      return res.status(400).json({ error: "Câu hỏi tối đa 600 ký tự" });
+    }
+
+    if (typeof prompt !== "string" || !prompt.trim()) {
       return res.status(400).json({ error: 'Thiếu nội dung câu hỏi' });
     }
 
     // 3. Gọi model Gemini 1.5 Flash (Nhanh và miễn phí tốt)
+    const limit = rateLimit(getClientIp(req));
+    if (!limit.allowed) {
+      res.setHeader("Retry-After", limit.retryAfter);
+      return res.status(429).json({
+        error: `Bạn gửi quá nhanh. Vui lòng thử lại sau ${limit.retryAfter} giây.`,
+      });
+    }
+
     const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     // 4. "Luật chơi" cho AI - System Prompt
