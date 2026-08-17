@@ -457,6 +457,23 @@
       margin-bottom: 16px;
     }
 
+    .clear-history {
+      width: 100%;
+      margin-top: 13px;
+      border: 0;
+      background: transparent;
+      color: rgba(38, 36, 31, 0.6);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12.5px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .clear-history:hover {
+      color: var(--teal);
+    }
+
     .qa-feed {
       display: flex;
       flex-direction: column;
@@ -729,6 +746,7 @@
             placeholder="Ví dụ: Làm sao để từ chối khi bạn thân rủ làm điều mình không thoải mái?" maxlength="600" required></textarea>
           <div class="small-note" id="askLimitNote">Không cần đăng nhập. Không lưu tên hay thông tin định danh.</div>
           <button type="submit" class="btn btn-primary" id="askSubmit" style="width:100%; justify-content:center;">Gửi câu hỏi</button>
+          <button type="button" class="clear-history" id="clearQaHistory">Xóa lịch sử câu hỏi trên thiết bị này</button>
         </form>
         <div class="qa-feed" id="qaFeed"></div>
       </div>
@@ -951,6 +969,12 @@
         feed.appendChild(el);
       });
     }
+    document.getElementById("clearQaHistory").addEventListener("click", () => {
+      const confirmed = window.confirm("Xóa toàn bộ lịch sử câu hỏi và câu trả lời trên thiết bị này?");
+      if (!confirmed) return;
+      localStorage.removeItem(qaKey);
+      renderQA();
+    });
     // Sửa lại phần xử lý sự kiện trong index.html:
     document.getElementById("askForm").addEventListener("submit", async e => {
       e.preventDefault();
