@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const crypto = require("crypto");
 
 // Khởi tạo Gemini với API Key từ biến môi trường Vercel
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -10,9 +11,10 @@ const allowedOrigins = new Set([
   "https://www.safetalk.io.vn",
 ]);
 const requestsByIp = new Map();
-const COOLDOWN_MS = 30 * 1000;
 const WINDOW_MS = 60 * 60 * 1000;
-const MAX_REQUESTS_PER_HOUR = 20;
+const PUBLIC_LIMITS = { key: "public", cooldownMs: 30 * 1000, maxRequests: 20 };
+const ADMIN_LIMITS = { key: "admin", cooldownMs: 3 * 1000, maxRequests: 100 };
+const ADMIN_ACCESS_KEY = process.env.ADMIN_ACCESS_KEY;
 
 function getClientIp(req) {
   const forwarded = req.headers["x-forwarded-for"];
@@ -21,7 +23,16 @@ function getClientIp(req) {
     .trim();
 }
 
-function rateLimit(ip) {
+function isAdminRequest(req) {
+  const suppliedKey = req.headers["x-admin-key"];
+  if (!ADMIN_ACCESS_KEY || typeof suppliedKey !== "string") return false;
+
+  const expected = Buffer.from(ADMIN_ACCESS_KEY);
+  const supplied = Buffer.from(suppliedKey);
+  return expected.length === supplied.length && crypto.timingSafeEqual(expected, supplied);
+}
+
+function rateLimit(ip, limits) {
   const now = Date.now();
 
   for (const [key, timestamps] of requestsByIp) {
@@ -30,17 +41,18 @@ function rateLimit(ip) {
     else requestsByIp.delete(key);
   }
 
-  const timestamps = requestsByIp.get(ip) || [];
+  const key = `${limits.key}:${ip}`;
+  const timestamps = requestsByIp.get(key) || [];
   const lastRequest = timestamps[timestamps.length - 1];
-  if (lastRequest && now - lastRequest < COOLDOWN_MS) {
-    return { allowed: false, retryAfter: Math.ceil((COOLDOWN_MS - (now - lastRequest)) / 1000) };
+  if (lastRequest && now - lastRequest < limits.cooldownMs) {
+    return { allowed: false, retryAfter: Math.ceil((limits.cooldownMs - (now - lastRequest)) / 1000) };
   }
-  if (timestamps.length >= MAX_REQUESTS_PER_HOUR) {
+  if (timestamps.length >= limits.maxRequests) {
     return { allowed: false, retryAfter: Math.ceil((WINDOW_MS - (now - timestamps[0])) / 1000) };
   }
 
   timestamps.push(now);
-  requestsByIp.set(ip, timestamps);
+  requestsByIp.set(key, timestamps);
   return { allowed: true };
 }
 
@@ -52,7 +64,7 @@ export default async function handler(req, res) {
   }
   res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Key');
 
   // Xử lý kiểm tra quyền truy cập (OPTIONS request)
   if (req.method === 'OPTIONS') {
@@ -65,7 +77,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { prompt } = req.body;
+    const { prompt, action } = req.body || {};
+    const isAdmin = isAdminRequest(req);
+    const limit = rateLimit(getClientIp(req), isAdmin ? ADMIN_LIMITS : PUBLIC_LIMITS);
+    if (!limit.allowed) {
+      res.setHeader("Retry-After", limit.retryAfter);
+      return res.status(429).json({
+        error: `Bạn gửi quá nhanh. Vui lòng thử lại sau ${limit.retryAfter} giây.`,
+      });
+    }
+
+    if (action === "verify-admin") {
+      if (!isAdmin) return res.status(401).json({ error: "Khóa quản trị không đúng" });
+      return res.status(200).json({ admin: true });
+    }
 
     if (typeof prompt === "string" && prompt.length > 600) {
       return res.status(400).json({ error: "Câu hỏi tối đa 600 ký tự" });
@@ -76,14 +101,6 @@ export default async function handler(req, res) {
     }
 
     // 3. Gọi model Gemini 1.5 Flash (Nhanh và miễn phí tốt)
-    const limit = rateLimit(getClientIp(req));
-    if (!limit.allowed) {
-      res.setHeader("Retry-After", limit.retryAfter);
-      return res.status(429).json({
-        error: `Bạn gửi quá nhanh. Vui lòng thử lại sau ${limit.retryAfter} giây.`,
-      });
-    }
-
     const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     // 4. "Luật chơi" cho AI - System Prompt
