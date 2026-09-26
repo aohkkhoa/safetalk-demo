@@ -501,6 +501,26 @@
       border-radius: 12px;
     }
 
+    .qa-item .a p {
+      margin: 0;
+    }
+
+    .qa-item .a p + p,
+    .qa-item .a ul,
+    .qa-item .a ol {
+      margin-top: 0.65em;
+    }
+
+    .qa-item .a ul,
+    .qa-item .a ol {
+      margin-bottom: 0;
+      padding-left: 1.5em;
+    }
+
+    .qa-item .a li + li {
+      margin-top: 0.3em;
+    }
+
     .qa-item .meta {
       font-size: 11px;
       font-family: 'JetBrains Mono', monospace;
@@ -951,6 +971,53 @@
         return "Rất tiếc, hệ thống đang bận. Bạn hãy thử lại sau nhé!";
       }
     }
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+    function formatMarkdownInline(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|\s)\*([^*]+)\*(?=\s|$)/g, "$1<em>$2</em>");
+    }
+    function formatAiAnswer(markdown) {
+      const blocks = [];
+      let paragraph = [];
+      let listItems = [];
+      let listType = "";
+      const flushParagraph = () => {
+        if (paragraph.length) blocks.push(`<p>${paragraph.map(formatMarkdownInline).join(" ")}</p>`);
+        paragraph = [];
+      };
+      const flushList = () => {
+        if (listItems.length) blocks.push(`<${listType}>${listItems.map(item => `<li>${formatMarkdownInline(item)}</li>`).join("")}</${listType}>`);
+        listItems = [];
+        listType = "";
+      };
+
+      String(markdown || "").split(/\r?\n/).forEach(line => {
+        const trimmed = line.trim();
+        const match = trimmed.match(/^(?:[-*]\s+|\d+[.)]\s+)(.+)$/);
+        if (!trimmed) {
+          flushParagraph();
+          flushList();
+        } else if (match) {
+          flushParagraph();
+          const nextType = /^\d/.test(trimmed) ? "ol" : "ul";
+          if (listType && listType !== nextType) flushList();
+          listType = nextType;
+          listItems.push(match[1]);
+        } else {
+          flushList();
+          paragraph.push(trimmed);
+        }
+      });
+      flushParagraph();
+      flushList();
+      return blocks.join("");
+    }
     function renderQA() {
       const feed = document.getElementById("qaFeed");
       const list = loadQA();
@@ -962,7 +1029,16 @@
       list.slice().reverse().forEach(item => {
         const el = document.createElement("div");
         el.className = "frame qa-item";
-        el.innerHTML = `<div class="q">Ẩn danh hỏi: "${item.q}"</div><div class="a">${item.a}</div><div class="meta">${item.time}</div>`;
+        const question = document.createElement("div");
+        question.className = "q";
+        question.textContent = `Ẩn danh hỏi: "${item.q}"`;
+        const answer = document.createElement("div");
+        answer.className = "a";
+        answer.innerHTML = formatAiAnswer(item.a);
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = item.time;
+        el.append(question, answer, meta);
         feed.appendChild(el);
       });
     }
