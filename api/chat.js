@@ -59,6 +59,23 @@ function rateLimit(ip, limits) {
   return { allowed: true };
 }
 
+const GEMINI_RETRY_DELAYS_MS = [1000, 2500];
+
+function isGeminiOverloaded(error) {
+  return error?.status === 503 || /\b503\s+Service Unavailable\b/i.test(error?.message || "");
+}
+
+async function generateContentWithRetry(model, prompt) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await model.generateContent(prompt);
+    } catch (error) {
+      if (!isGeminiOverloaded(error) || attempt >= GEMINI_RETRY_DELAYS_MS.length) throw error;
+      await new Promise(resolve => setTimeout(resolve, GEMINI_RETRY_DELAYS_MS[attempt]));
+    }
+  }
+}
+
 export default async function handler(req, res) {
   // 1. Cấu hình CORS để web của bạn có thể gọi API này
   const origin = req.headers.origin;
@@ -124,7 +141,7 @@ export default async function handler(req, res) {
     - Giọng văn: Khoa học, nhẹ nhàng, gần gũi và bảo vệ sức khỏe tâm lý người hỏi.
     - Luôn khuyến khích học sinh tìm kiếm sự giúp đỡ từ người lớn tin cậy trong các tình huống nguy hiểm.`;
     
-    const result = await model.generateContent(systemInstruction + "\nCâu hỏi: " + prompt);
+    const result = await generateContentWithRetry(model, systemInstruction + "\nCâu hỏi: " + prompt);
     const response = await result.response;
     const text = response.text();
 
@@ -133,6 +150,10 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Lỗi AI:", error);
-    res.status(500).json({ error: 'Hệ thống AI đang gặp lỗi' });
+    if (isGeminiOverloaded(error)) {
+      res.setHeader("Retry-After", 5);
+      return res.status(503).json({ error: "Gemini đang quá tải. Vui lòng thử lại sau ít phút." });
+    }
+    return res.status(500).json({ error: 'Hệ thống AI đang gặp lỗi' });
   }
 }
