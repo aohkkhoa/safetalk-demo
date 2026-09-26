@@ -9,7 +9,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const allowedOrigins = new Set([
   "https://safetalk.io.vn",
   "https://www.safetalk.io.vn",
+  "https://safetalk-demo.vercel.app",
 ]);
+const isAllowedOrigin = origin =>
+  allowedOrigins.has(origin) || /^https:\/\/safetalk-demo(?:-[a-z0-9-]+)?\.vercel\.app$/.test(origin || "");
 const requestsByIp = new Map();
 const WINDOW_MS = 60 * 60 * 1000;
 const PUBLIC_LIMITS = { key: "public", cooldownMs: 30 * 1000, maxRequests: 20 };
@@ -59,7 +62,7 @@ function rateLimit(ip, limits) {
 export default async function handler(req, res) {
   // 1. Cấu hình CORS để web của bạn có thể gọi API này
   const origin = req.headers.origin;
-  if (!allowedOrigins.has(origin)) {
+  if (!isAllowedOrigin(origin)) {
     return res.status(403).json({ error: "Không cho phép gọi API từ nguồn này" });
   }
   res.setHeader("Access-Control-Allow-Origin", origin);
